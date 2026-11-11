@@ -24,13 +24,9 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- Database KHUSUS test (RefreshDatabase menghapus isinya). Buat dulu: CREATE DATABASE pabwe_p8_blog_test; -->
-        <env name="DB_CONNECTION" value="pgsql"/>
-        <env name="DB_HOST" value="127.0.0.1"/>
-        <env name="DB_PORT" value="5432"/>
-        <env name="DB_DATABASE" value="pabwe_p8_blog_test"/>
-        <env name="DB_USERNAME" value="postgres"/>
-        <env name="DB_PASSWORD" value="postgres"/>
+        <!-- Database khusus testing: SQLite in-memory agar CI tidak membutuhkan server PostgreSQL. -->
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
