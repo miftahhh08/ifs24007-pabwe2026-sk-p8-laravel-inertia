@@ -1,7 +1,8 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import Avatar from '../components/Avatar';
 import FlashMessage from '../components/FlashMessage';
 import LoadingIndicator from '../components/LoadingIndicator';
-import { IconDashboard, IconGlobe, IconLogout } from '../components/Icons';
+import { IconDashboard, IconFileText, IconGlobe, IconLogout, IconUser, IconUsers } from '../components/Icons';
 
 /**
  * Layout dashboard (area login): sidebar di layar lebar, bilah atas di ponsel.
@@ -9,9 +10,17 @@ import { IconDashboard, IconGlobe, IconLogout } from '../components/Icons';
 export default function AppLayout({ children }) {
     const { props, url } = usePage();
     const user = props.auth.user;
+    const isAdmin = user.role === 'admin';
 
     const links = [
         { href: '/dashboard/posts', label: 'Artikel Saya', icon: <IconDashboard />, active: url.startsWith('/dashboard/posts') },
+        ...(isAdmin
+            ? [
+                  { href: '/admin/users', label: 'Pengguna', icon: <IconUsers />, active: url.startsWith('/admin/users') },
+                  { href: '/admin/posts', label: 'Semua Artikel', icon: <IconFileText />, active: url.startsWith('/admin/posts') },
+              ]
+            : []),
+        { href: '/profile', label: 'Profil', icon: <IconUser />, active: url.startsWith('/profile') },
         { href: '/', label: 'Lihat Blog', icon: <IconGlobe />, active: false },
     ];
 
@@ -52,12 +61,12 @@ export default function AppLayout({ children }) {
 
                 <div className="hidden border-t border-slate-200 p-4 md:absolute md:bottom-0 md:block md:w-full">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
-                            {user.name.charAt(0).toUpperCase()}
-                        </span>
+                        <Avatar user={user} />
                         <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
-                            <p className="truncate text-xs text-slate-500">@{user.username}</p>
+                            <p className="truncate text-xs text-slate-500">
+                                @{user.username} &middot; {isAdmin ? 'Admin' : 'Penulis'}
+                            </p>
                         </div>
                     </div>
                     <button

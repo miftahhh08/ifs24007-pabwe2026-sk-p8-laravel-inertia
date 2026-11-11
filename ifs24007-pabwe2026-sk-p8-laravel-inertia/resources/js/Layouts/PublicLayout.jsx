@@ -1,4 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import Avatar from '../components/Avatar';
 import FlashMessage from '../components/FlashMessage';
 import LoadingIndicator from '../components/LoadingIndicator';
 import { IconDashboard, IconLogin, IconLogout, IconUserPlus } from '../components/Icons';
@@ -33,12 +34,9 @@ export default function PublicLayout({ children }) {
                                     <IconDashboard />
                                     <span className="hidden sm:inline">{isAdmin ? 'Panel Admin' : 'Dashboard Penulis'}</span>
                                 </Link>
-                                <span
-                                    className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700"
-                                    title={user.name}
-                                >
-                                    {user.name.charAt(0).toUpperCase()}
-                                </span>
+                                <Link href="/profile" title="Profil saya" aria-label="Profil saya">
+                                    <Avatar user={user} />
+                                </Link>
                                 <button
                                     type="button"
                                     onClick={() => router.post('/logout')}

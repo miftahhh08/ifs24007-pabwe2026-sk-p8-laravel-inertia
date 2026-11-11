@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
+import AiGeneratorModal from '../../components/AiGeneratorModal';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
+import ImportModal from '../../components/ImportModal';
 import KebabMenu from '../../components/KebabMenu';
 import Pagination from '../../components/Pagination';
 import PostFormModal from '../../components/PostFormModal';
-import { IconEye, IconPencil, IconPlus, IconSearch, IconTrash } from '../../components/Icons';
+import { IconDownload, IconEye, IconPencil, IconPlus, IconSearch, IconSparkles, IconTrash, IconUpload } from '../../components/Icons';
 
 function StatCard({ label, value, tone }) {
     return (
@@ -29,6 +31,8 @@ export default function Index({ posts, stats, categories, filters }) {
     const [formState, setFormState] = useState(null); // null | { mode: 'create' } | { mode: 'edit', post }
     const [deleting, setDeleting] = useState(null);
     const [busyId, setBusyId] = useState(null);
+    const [showImport, setShowImport] = useState(false);
+    const [showAi, setShowAi] = useState(false);
 
     const search = (e) => {
         e.preventDefault();
@@ -49,14 +53,39 @@ export default function Index({ posts, stats, categories, filters }) {
 
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-2xl font-bold text-slate-900">Artikel Saya</h1>
-                <button
-                    type="button"
-                    onClick={() => setFormState({ mode: 'create' })}
-                    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-                >
-                    <IconPlus />
-                    Tambah Artikel
-                </button>
+                <div className="flex flex-wrap gap-2">
+                    <a
+                        href="/dashboard/posts/export"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                    >
+                        <IconDownload />
+                        Ekspor
+                    </a>
+                    <button
+                        type="button"
+                        onClick={() => setShowImport(true)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                    >
+                        <IconUpload />
+                        Impor
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowAi(true)}
+                        className="inline-flex items-center gap-2 rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-semibold text-white hover:bg-violet-800"
+                    >
+                        <IconSparkles />
+                        AI Generator
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setFormState({ mode: 'create' })}
+                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                    >
+                        <IconPlus />
+                        Tambah Artikel
+                    </button>
+                </div>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -153,6 +182,8 @@ export default function Index({ posts, stats, categories, filters }) {
                 />
             )}
             {deleting && <ConfirmDeleteModal post={deleting} onClose={() => setDeleting(null)} />}
+            {showImport && <ImportModal onClose={() => setShowImport(false)} />}
+            {showAi && <AiGeneratorModal onClose={() => setShowAi(false)} />}
         </AppLayout>
     );
 }

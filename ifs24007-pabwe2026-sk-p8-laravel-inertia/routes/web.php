@@ -1,8 +1,11 @@
 <?php
 
+use App\Features\Admin\Controllers\AdminUserController;
 use App\Features\Auth\Controllers\AuthController;
+use App\Features\Post\Controllers\AdminPostController;
 use App\Features\Post\Controllers\PostController;
 use App\Features\Post\Controllers\PublicPostController;
+use App\Features\Profile\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,10 +28,28 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 /*
 |--------------------------------------------------------------------------
-| Tingkat 2: Anggota (Penulis) - perlu login
+| Semua pengguna yang login: profil
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('dashboard')->name('dashboard.')->group(function () {
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [ProfileController::class, 'uploadPhoto'])->name('profile.photo.store');
+    Route::delete('/profile/photo', [ProfileController::class, 'removePhoto'])->name('profile.photo.destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Tingkat 2: Anggota (Penulis)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'post.owner'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    // Rute statis harus sebelum rute {post}
+    Route::get('posts/export', [PostController::class, 'export'])->name('posts.export');
+    Route::post('posts/import', [PostController::class, 'import'])->name('posts.import');
+    Route::post('posts/ai-generate', [PostController::class, 'aiGenerate'])->name('posts.ai-generate');
+    Route::post('posts/ai-save', [PostController::class, 'aiSave'])->name('posts.ai-save');
+
     Route::get('posts', [PostController::class, 'index'])->name('posts.index');
     Route::post('posts', [PostController::class, 'store'])->name('posts.store');
 
@@ -43,10 +64,14 @@ Route::middleware('auth')->prefix('dashboard')->name('dashboard.')->group(functi
 
 /*
 |--------------------------------------------------------------------------
-| SEMENTARA: Panel Admin diisi sungguhan pada Tahap 5.
+| Tingkat 3: Admin
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::inertia('/admin/users', 'Dashboard/Placeholder', ['heading' => 'Panel Admin'])
-        ->name('admin.users.index');
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('users/{user}/posts', [AdminPostController::class, 'userPosts'])->whereNumber('user')->name('users.posts');
+    Route::get('users/{user}/posts/export', [AdminPostController::class, 'exportUser'])->whereNumber('user')->name('users.posts.export');
+
+    Route::get('posts', [AdminPostController::class, 'index'])->name('posts.index');
+    Route::get('posts/export', [AdminPostController::class, 'exportAll'])->name('posts.export');
 });

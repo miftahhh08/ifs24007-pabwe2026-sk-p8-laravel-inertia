@@ -5,6 +5,7 @@ namespace App\Features\Post\Repositories;
 use App\Features\Post\Contracts\PostRepositoryInterface;
 use App\Features\Post\Models\Post;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class PostRepository implements PostRepositoryInterface
@@ -90,5 +91,44 @@ class PostRepository implements PostRepositoryInterface
     public function slugExists(string $slug): bool
     {
         return Post::query()->where('slug', $slug)->exists();
+    }
+
+    public function allByUser(int $userId): Collection
+    {
+        return Post::query()
+            ->with('user:id,name,username')
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function allWithAuthors(): Collection
+    {
+        return Post::query()
+            ->with('user:id,name,username')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function paginateAll(?string $search, int $perPage = 10): LengthAwarePaginator
+    {
+        return Post::query()
+            ->with('user:id,name,username')
+            ->when($search, function (Builder $query, string $search) {
+                $like = '%'.addcslashes($search, '%_\\').'%';
+
+                $query->where(function (Builder $q) use ($like) {
+                    $q->where('title', 'ilike', $like)
+                        ->orWhereHas('user', function (Builder $u) use ($like) {
+                            $u->where('name', 'ilike', $like)->orWhere('username', 'ilike', $like);
+                        });
+                });
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
     }
 }

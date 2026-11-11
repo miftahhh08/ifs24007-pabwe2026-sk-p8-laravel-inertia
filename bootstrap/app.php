@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsurePostOwnership;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -18,12 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
-        // Pemakaian di route: ->middleware('role:admin')
         $middleware->alias([
             'role' => EnsureRole::class,
+            'post.owner' => EnsurePostOwnership::class,
         ]);
 
-        // Pengguna yang SUDAH login lalu membuka /login akan diarahkan ke sini.
+        // Pengguna yang SUDAH login lalu membuka /login diarahkan ke sini.
         $middleware->redirectUsersTo(
             fn (Request $request) => $request->user()?->isAdmin() ? '/admin/users' : '/dashboard/posts'
         );

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Features\Post\Models\Post;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -46,5 +48,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    /** $user->profile_photo_url -> URL publik foto profil (atau null). */
+    protected function profilePhotoUrl(): Attribute
+    {
+        return Attribute::get(
+            fn () => $this->profile_photo_path
+                ? Storage::disk('public')->url($this->profile_photo_path)
+                : null
+        );
     }
 }

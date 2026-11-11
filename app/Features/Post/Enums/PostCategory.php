@@ -2,6 +2,8 @@
 
 namespace App\Features\Post\Enums;
 
+use Illuminate\Support\Str;
+
 enum PostCategory: string
 {
     case Teknologi = 'Teknologi';
@@ -15,6 +17,20 @@ enum PostCategory: string
     public static function values(): array
     {
         return array_map(fn (self $c) => $c->value, self::cases());
+    }
+
+    /** Cocokkan teks bebas (tidak peka huruf besar/kecil); jika tak cocok -> Umum. */
+    public static function fromLabel(?string $label): self
+    {
+        $needle = Str::lower(trim((string) $label));
+
+        foreach (self::cases() as $case) {
+            if (Str::lower($case->value) === $needle) {
+                return $case;
+            }
+        }
+
+        return self::Umum;
     }
 
     public function description(): string
