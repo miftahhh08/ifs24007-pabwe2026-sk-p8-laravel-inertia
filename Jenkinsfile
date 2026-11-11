@@ -90,11 +90,9 @@ pipeline {
                     echo "=== PHP Dependencies Installed ==="
 
                     echo "=== Composer Audit (fail on vulnerabilities) ==="
-                    # Jika Packagist tidak dapat dijangkau sementara, audit tidak
-                    # menggagalkan pipeline. Advisory yang berhasil diambil tetap diperiksa.
-                    # Trivy tetap berjalan pada tahap keamanan berikutnya.
-                    composer audit --no-interaction --ignore-unreachable
-                    echo "=== Composer Audit Selesai ==="
+                    # Exit non-zero jika ada advisory → pipeline FAILURE
+                    composer audit --no-interaction
+                    echo "=== Composer Audit OK (no known vulnerabilities) ==="
                 '''
             }
         }

@@ -17,7 +17,7 @@ class AdminUserService
                 $like = '%'.addcslashes($search, '%_\\').'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('name', 'ilike', $like)->orWhere('username', 'ilike', $like);
+                    $q->whereRaw('LOWER(name) LIKE LOWER(?)', [$like])->orWhereRaw('LOWER(username) LIKE LOWER(?)', [$like]);
                 });
             })
             ->orderBy('name')
