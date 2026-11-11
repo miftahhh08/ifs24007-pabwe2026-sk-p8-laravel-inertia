@@ -14,7 +14,7 @@ return [
 
     'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
 
-    // Detik. Dijaga di bawah batas waktu eksekusi PHP (30 dtk) pada server bawaan.
-    'timeout' => (int) env('OPENAI_TIMEOUT', 25),
+    // Detik, berlaku PER permintaan (tiap artikel = 1 permintaan, dijalankan paralel).
+    'timeout' => (int) env('OPENAI_TIMEOUT', 60),
 
 ];

@@ -12,6 +12,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AiGeneratorTest extends TestCase
@@ -123,6 +124,33 @@ class AiGeneratorTest extends TestCase
         app(AiClientInterface::class)->generatePosts('topik', 1);
     }
 
+    /** @return array<string, array{0:?string}> */
+    public static function invalidBaseUrls(): array
+    {
+        return [
+            'hanya nama' => ['delcom'],
+            'tanpa skema' => ['api.openai.com/v1'],
+            'kosong' => [''],
+            'null' => [null],
+        ];
+    }
+
+    #[DataProvider('invalidBaseUrls')]
+    public function test_service_rejects_invalid_base_url_with_clear_message(?string $baseUrl): void
+    {
+        config(['openai.api_key' => 'kunci-uji', 'openai.base_url' => $baseUrl]);
+        Http::fake();
+
+        try {
+            app(AiClientInterface::class)->generatePosts('x', 1);
+            $this->fail('Seharusnya melempar AiGenerationException.');
+        } catch (AiGenerationException $e) {
+            $this->assertStringContainsString('OPENAI_BASE_URL tidak valid', $e->getMessage());
+            $this->assertStringContainsString('https://', $e->getMessage());
+            Http::assertNothingSent();
+        }
+    }
+
     public function test_service_parses_plain_json_array_and_sends_correct_request(): void
     {
         $this->fakeAiResponse(json_encode([$this->item('Satu'), $this->item('Dua'), $this->item('Tiga')]));
@@ -139,20 +167,20 @@ class AiGeneratorTest extends TestCase
 
     public function test_service_handles_fenced_wrapped_and_object_responses(): void
     {
-        $json = json_encode([$this->item()]);
+        $json = json_encode([$this->item('Satu')]);
         $service = app(AiClientInterface::class);
 
         $this->fakeAiResponse("```json\n{$json}\n```");
-        $this->assertCount(1, $service->generatePosts('x', 3));
+        $this->assertSame('Satu', $service->generatePosts('x', 1)[0]->title);
 
         $this->fakeAiResponse("Berikut hasilnya: {$json} semoga membantu.");
-        $this->assertCount(1, $service->generatePosts('x', 3));
+        $this->assertSame('Satu', $service->generatePosts('x', 1)[0]->title);
 
-        $this->fakeAiResponse(json_encode(['articles' => [$this->item(), $this->item('Lain')]]));
-        $this->assertCount(2, $service->generatePosts('x', 3));
+        $this->fakeAiResponse(json_encode(['articles' => [$this->item('Dari objek'), $this->item('Lain')]]));
+        $this->assertSame('Dari objek', $service->generatePosts('x', 1)[0]->title);
 
-        $this->fakeAiResponse(json_encode($this->item()));
-        $this->assertCount(1, $service->generatePosts('x', 3));
+        $this->fakeAiResponse(json_encode($this->item('Tunggal')));
+        $this->assertSame('Tunggal', $service->generatePosts('x', 1)[0]->title);
     }
 
     public function test_service_skips_invalid_items(): void
@@ -163,10 +191,35 @@ class AiGeneratorTest extends TestCase
             $this->item('Valid'),
         ]));
 
-        $items = app(AiClientInterface::class)->generatePosts('x', 5);
+        $items = app(AiClientInterface::class)->generatePosts('x', 1);
 
         $this->assertCount(1, $items);
         $this->assertSame('Valid', $items[0]->title);
+    }
+
+    public function test_service_sends_one_parallel_request_per_article(): void
+    {
+        $this->fakeAiResponse(json_encode([$this->item('Satu')]));
+
+        $items = app(AiClientInterface::class)->generatePosts('laravel', 3);
+
+        $this->assertCount(3, $items);
+        Http::assertSentCount(3);
+        Http::assertSent(fn (Request $r) => str_contains($r['messages'][1]['content'], 'artikel ke-2 dari 3'));
+    }
+
+    public function test_service_keeps_successful_articles_when_some_requests_fail(): void
+    {
+        config(['openai.api_key' => 'kunci-uji', 'openai.base_url' => 'https://ai.test/v1']);
+        Http::swap(new HttpFactory());
+        Http::fake(['ai.test/*' => Http::sequence()
+            ->push(['choices' => [['message' => ['content' => json_encode([$this->item('Berhasil')])]]]])
+            ->pushStatus(500)]);
+
+        $items = app(AiClientInterface::class)->generatePosts('x', 2);
+
+        $this->assertCount(1, $items);
+        $this->assertSame('Berhasil', $items[0]->title);
     }
 
     public function test_service_fails_when_no_valid_article_returned(): void
@@ -206,6 +259,102 @@ class AiGeneratorTest extends TestCase
         $this->expectExceptionMessage('Tidak dapat terhubung');
 
         app(AiClientInterface::class)->generatePosts('x', 1);
+    }
+
+    /** @return array<string, array{0:string, 1:string}> */
+    public static function connectionFailures(): array
+    {
+        return [
+            'timeout' => ['cURL error 28: Operation timed out after 60001 milliseconds', 'terlalu lama merespons'],
+            'timeout tanpa kode' => ['request timed out', 'terlalu lama merespons'],
+            'sertifikat ssl' => ['cURL error 60: SSL certificate problem: unable to get local issuer certificate', 'sertifikat SSL'],
+            'dengan tautan dokumentasi' => ['cURL error 99: gagal (see https://curl.se/libcurl/c/libcurl-errors.html) for https://ai.test', 'Tidak dapat terhubung'],
+            'dns' => ['cURL error 6: Could not resolve host: ai.test', 'tidak ditemukan'],
+            'ditolak' => ['cURL error 7: Failed to connect to ai.test port 443', 'ditolak'],
+            'lainnya' => ['cURL error 35: sesuatu (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)', 'Detail: cURL error 35: sesuatu'],
+        ];
+    }
+
+    #[DataProvider('connectionFailures')]
+    public function test_service_explains_connection_failure_cause(string $raw, string $expected): void
+    {
+        config(['openai.api_key' => 'kunci-uji', 'openai.base_url' => 'https://ai.test/v1']);
+        Http::swap(new HttpFactory());
+        Http::fake(function () use ($raw) {
+            throw new ConnectionException($raw);
+        });
+
+        try {
+            app(AiClientInterface::class)->generatePosts('x', 1);
+            $this->fail('Seharusnya melempar AiGenerationException.');
+        } catch (AiGenerationException $e) {
+            $this->assertStringContainsString($expected, $e->getMessage());
+            // Detail teknis asli cURL harus ikut tampil, tanpa tautan dokumentasi.
+            $this->assertStringContainsString('Detail: '.preg_replace('/\s*\(see https?:\/\/\S+\)/', '', $raw), $e->getMessage());
+            $this->assertStringNotContainsString('(see https', $e->getMessage());
+            $this->assertInstanceOf(ConnectionException::class, $e->getPrevious());
+        }
+    }
+
+    /** @return array<string, array{0:int, 1:array<string,mixed>, 2:string}> */
+    public static function httpFailures(): array
+    {
+        return [
+            '401' => [401, [], 'OPENAI_API_KEY'],
+            '403' => [403, [], 'OPENAI_API_KEY'],
+            '404' => [404, [], 'OPENAI_MODEL'],
+            '429' => [429, [], 'kuota'],
+            '500 dengan keterangan' => [500, ['error' => ['message' => 'model sedang sibuk']], 'Keterangan: model sedang sibuk'],
+        ];
+    }
+
+    #[DataProvider('httpFailures')]
+    public function test_service_explains_http_failure(int $status, array $body, string $expected): void
+    {
+        config(['openai.api_key' => 'kunci-uji', 'openai.base_url' => 'https://ai.test/v1']);
+        Http::swap(new HttpFactory());
+        Http::fake(['ai.test/*' => Http::response($body, $status)]);
+
+        $this->expectException(AiGenerationException::class);
+        $this->expectExceptionMessage($expected);
+
+        app(AiClientInterface::class)->generatePosts('x', 1);
+    }
+
+    // ---------- Perintah ai:check ----------
+
+    public function test_ai_check_reports_success(): void
+    {
+        $this->fakeAiResponse(json_encode([$this->item('Judul Uji')]));
+
+        $this->artisan('ai:check')
+            ->expectsOutputToContain('Model    : model-uji')
+            ->expectsOutputToContain('BERHASIL')
+            ->assertExitCode(0);
+    }
+
+    public function test_ai_check_reports_missing_key(): void
+    {
+        config(['openai.api_key' => null]);
+
+        $this->artisan('ai:check')
+            ->expectsOutputToContain('(KOSONG)')
+            ->expectsOutputToContain('API key AI belum diisi')
+            ->assertExitCode(1);
+    }
+
+    public function test_ai_check_shows_technical_detail_on_connection_failure(): void
+    {
+        config(['openai.api_key' => 'kunci-uji', 'openai.base_url' => 'https://ai.test/v1']);
+        Http::swap(new HttpFactory());
+        Http::fake(function () {
+            throw new ConnectionException('cURL error 28: Operation timed out');
+        });
+
+        $this->artisan('ai:check')
+            ->expectsOutputToContain('terlalu lama merespons')
+            ->expectsOutputToContain('Detail teknis: cURL error 28')
+            ->assertExitCode(1);
     }
 
     // ---------- DTO ----------

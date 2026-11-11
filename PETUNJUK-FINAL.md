@@ -5,3 +5,9 @@ ekspor/impor Excel, AI Generator, panel Admin, profil, dan test (target 100% cov
 
 Ekstrak ke FOLDER DALAM proyek (yang berisi file `artisan`), pilih Replace semua.
 Langkah lengkap (pengaturan .env, database test, build, uji) ada di chat.
+
+## Perbaikan AI Generator (terbaru)
+
+- AI kini memanggil tiap artikel secara paralel, dengan pesan error yang menjelaskan penyebab.
+- Setelah mengekstrak: `php artisan config:clear`, lalu `php artisan ai:check`, lalu `npm run build`.
+- `php artisan ai:check` menampilkan penyebab pasti bila AI gagal (timeout, SSL, URL salah, API key ditolak).

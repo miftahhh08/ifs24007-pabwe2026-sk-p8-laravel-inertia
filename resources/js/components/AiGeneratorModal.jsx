@@ -104,6 +104,11 @@ export default function AiGeneratorModal({ onClose }) {
                             {processing ? 'Menghasilkan...' : 'Hasilkan'}
                         </button>
                     </form>
+                    {processing && (
+                        <p role="status" className="mt-2 text-sm text-slate-500">
+                            AI sedang menulis artikel. Biasanya butuh 10-30 detik, jangan tutup jendela ini...
+                        </p>
+                    )}
                     {errors.topic && <p className="mt-2 text-sm text-red-600">{errors.topic}</p>}
                     {errors.count && <p className="mt-2 text-sm text-red-600">{errors.count}</p>}
 
