@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Editor from '@toast-ui/editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
+import sanitizeHtml from '../lib/sanitizeHtml';
 
 /**
  * Editor Markdown (TOAST UI Editor).
@@ -19,6 +20,7 @@ export default function MarkdownEditor({ value, onChange, height = '420px' }) {
             previewStyle: 'vertical',
             initialValue: value ?? '',
             usageStatistics: false,
+            customHTMLSanitizer: sanitizeHtml,
             events: {
                 change: () => onChangeRef.current(editor.getMarkdown()),
             },

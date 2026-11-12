@@ -24,9 +24,10 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- Database khusus testing: SQLite in-memory agar CI tidak membutuhkan server PostgreSQL. -->
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!-- Test memakai SQLite in-memory (sesuai pipeline Jenkins): cepat, tanpa server database,
+             dan tidak pernah menyentuh database aplikasi. force="true" mencegah env lain menimpanya. -->
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

@@ -14,10 +14,10 @@ class AdminUserService
         return User::query()
             ->withCount('posts')
             ->when($search, function (Builder $query, string $search) {
-                $like = '%'.mb_strtolower($search).'%';
+                $like = '%'.addcslashes($search, '%_\\').'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(username) LIKE ?', [$like]);
+                    $q->whereLike('name', $like)->orWhereLike('username', $like);
                 });
             })
             ->orderBy('name')

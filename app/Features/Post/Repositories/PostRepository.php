@@ -16,13 +16,14 @@ class PostRepository implements PostRepositoryInterface
             ->published()
             ->with('user:id,name,username')
             ->when($search, function (Builder $query, string $search) {
-                // LOWER + LIKE kompatibel dengan SQLite dan PostgreSQL, serta tidak peka huruf besar/kecil.
-                $like = '%'.mb_strtolower($search).'%';
+                // whereLike() tidak peka huruf besar/kecil: dikompilasi menjadi ILIKE di
+                // PostgreSQL dan LIKE di SQLite/MySQL, sehingga portabel (juga untuk CI).
+                $like = '%'.addcslashes($search, '%_\\').'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->whereRaw('LOWER(title) LIKE ?', [$like])
-                        ->orWhereRaw('LOWER(excerpt) LIKE ?', [$like])
-                        ->orWhereRaw('LOWER(content) LIKE ?', [$like]);
+                    $q->whereLike('title', $like)
+                        ->orWhereLike('excerpt', $like)
+                        ->orWhereLike('content', $like);
                 });
             })
             ->when($category, fn (Builder $query, string $category) => $query->where('category', $category))
@@ -46,7 +47,7 @@ class PostRepository implements PostRepositoryInterface
         return Post::query()
             ->where('user_id', $userId)
             ->when($search, function (Builder $query, string $search) {
-                $query->whereRaw('LOWER(title) LIKE ?', ['%'.addcslashes($search, '%_\\').'%']);
+                $query->whereLike('title', '%'.addcslashes($search, '%_\\').'%');
             })
             ->orderByDesc('created_at')
             ->orderByDesc('id')
@@ -117,12 +118,12 @@ class PostRepository implements PostRepositoryInterface
         return Post::query()
             ->with('user:id,name,username')
             ->when($search, function (Builder $query, string $search) {
-                $like = '%'.mb_strtolower($search).'%';
+                $like = '%'.addcslashes($search, '%_\\').'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->whereRaw('LOWER(title) LIKE ?', [$like])
+                    $q->whereLike('title', $like)
                         ->orWhereHas('user', function (Builder $u) use ($like) {
-                            $u->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(username) LIKE ?', [$like]);
+                            $u->whereLike('name', $like)->orWhereLike('username', $like);
                         });
                 });
             })

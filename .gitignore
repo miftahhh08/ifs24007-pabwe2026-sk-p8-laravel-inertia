@@ -31,6 +31,3 @@ events.txt
 phpunit_*.txt
 trivy
 latest-app.zip
-
-# Salinan kerja bersarang (bukan bagian repo)
-/ifs24007-pabwe2026-sk-p8-laravel-inertia/
