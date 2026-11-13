@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Paksa HTTPS
+    |--------------------------------------------------------------------------
+    |
+    | Dipakai AppServiceProvider (URL::forceScheme('https')) agar semua URL dan
+    | redirect (mis. ke /login atau /dashboard/posts) memakai https:// saat
+    | aplikasi berjalan di balik reverse proxy HTTPS. Otomatis aktif bila
+    | APP_URL diawali https://; bisa dipaksa lewat APP_FORCE_HTTPS=true/false.
+    |
+    */
+
+    'force_https' => (bool) env('APP_FORCE_HTTPS', str_starts_with((string) env('APP_URL', ''), 'https://')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

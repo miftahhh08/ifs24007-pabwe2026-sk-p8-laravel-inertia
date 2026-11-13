@@ -25,4 +25,9 @@ class AppServiceProviderTest extends TestCase
 
         URL::forceScheme('http');
     }
+
+    public function test_force_https_config_key_exists_and_defaults_to_false_for_http_url(): void
+    {
+        $this->assertFalse(config('app.force_https'));
+    }
 }
