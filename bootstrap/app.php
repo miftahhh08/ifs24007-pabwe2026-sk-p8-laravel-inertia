@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Aplikasi berjalan di belakang reverse proxy HTTPS di server deploy:
+        // percayai header X-Forwarded-* agar Laravel tahu requestnya HTTPS
+        // (URL, redirect, dan cookie sesi dibentuk dengan skema yang benar).
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class AuthController extends Controller
 {
@@ -19,7 +20,7 @@ class AuthController extends Controller
         return Inertia::render('Auth/Login');
     }
 
-    public function login(Request $request, LoginUserAction $action): RedirectResponse
+    public function login(Request $request, LoginUserAction $action): SymfonyResponse
     {
         $data = $request->validate([
             'username' => ['required', 'string'],
@@ -37,7 +38,11 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->homeFor($request->user()));
+        // Muat ulang halaman penuh (bukan tukar halaman via XHR) agar sesi & token CSRF baru
+        // langsung terpakai dan alamat berubah secara nyata.
+        return Inertia::location(
+            $this->toPath(redirect()->intended($this->homeFor($request->user()))->getTargetUrl())
+        );
     }
 
     public function showRegister(): Response
@@ -45,7 +50,7 @@ class AuthController extends Controller
         return Inertia::render('Auth/Register');
     }
 
-    public function register(Request $request, RegisterUserAction $action): RedirectResponse
+    public function register(Request $request, RegisterUserAction $action): SymfonyResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -65,8 +70,9 @@ class AuthController extends Controller
         $user = $action->execute($data['name'], $data['username'], $data['password']);
 
         $request->session()->regenerate();
+        $request->session()->flash('success', 'Akun berhasil dibuat. Selamat datang!');
 
-        return redirect($this->homeFor($user))->with('success', 'Akun berhasil dibuat. Selamat datang!');
+        return Inertia::location($this->homeFor($user));
     }
 
     public function logout(Request $request): RedirectResponse
@@ -82,5 +88,13 @@ class AuthController extends Controller
     private function homeFor(User $user): string
     {
         return $user->isAdmin() ? '/admin/users' : '/dashboard/posts';
+    }
+
+    /** Ubah URL absolut menjadi path relatif agar tidak bergantung pada skema http/https proxy. */
+    private function toPath(string $url): string
+    {
+        $parts = parse_url($url);
+
+        return ($parts['path'] ?? '/').(isset($parts['query']) ? '?'.$parts['query'] : '');
     }
 }

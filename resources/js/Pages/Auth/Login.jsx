@@ -1,16 +1,28 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import PublicLayout from '../../Layouts/PublicLayout';
 
+/**
+ * Form login memakai input TIDAK terkontrol: nilai dibaca langsung dari DOM saat dikirim.
+ * Dengan begitu login tetap berhasil walau kolom diisi lewat skrip/autofill/pengelola
+ * password (yang tidak memicu event input React).
+ */
 export default function Login() {
-    const { data, setData, post, processing, errors } = useForm({
-        username: '',
-        password: '',
-        remember: false,
-    });
+    const { errors } = usePage().props;
+    const [processing, setProcessing] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
-        post('/login');
+        const form = new FormData(e.currentTarget);
+
+        router.post('/login', {
+            username: form.get('username') ?? '',
+            password: form.get('password') ?? '',
+            remember: form.get('remember') === 'on',
+        }, {
+            onStart: () => setProcessing(true),
+            onFinish: () => setProcessing(false),
+        });
     };
 
     return (
@@ -32,8 +44,7 @@ export default function Login() {
                                 name="username"
                                 type="text"
                                 autoComplete="username"
-                                value={data.username}
-                                onChange={(e) => setData('username', e.target.value)}
+                                defaultValue=""
                                 aria-invalid={Boolean(errors.username)}
                                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                             />
@@ -49,8 +60,7 @@ export default function Login() {
                                 name="password"
                                 type="password"
                                 autoComplete="current-password"
-                                value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
+                                defaultValue=""
                                 aria-invalid={Boolean(errors.password)}
                                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                             />
@@ -60,8 +70,7 @@ export default function Login() {
                         <label className="flex items-center gap-2 text-sm text-slate-600">
                             <input
                                 type="checkbox"
-                                checked={data.remember}
-                                onChange={(e) => setData('remember', e.target.checked)}
+                                name="remember"
                                 className="h-4 w-4 rounded border-slate-300"
                             />
                             Ingat saya
