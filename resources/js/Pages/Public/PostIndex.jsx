@@ -31,12 +31,12 @@ export default function PostIndex({ posts, categories, filters }) {
             <Head title="Beranda" />
 
             {/* Hero */}
-            <section className="bg-gradient-to-br from-indigo-600 to-violet-600 text-white">
+            <section className="bg-gradient-to-br from-indigo-700 to-violet-700 text-white">
                 <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
                     <h1 className="max-w-2xl text-3xl font-extrabold sm:text-5xl">
                         Tulis, bagikan, dan temukan cerita yang menginspirasi.
                     </h1>
-                    <p className="mt-4 max-w-xl text-indigo-100">
+                    <p className="mt-4 max-w-xl text-white">
                         BlogVerse Pro adalah ruang bagi para penulis untuk menerbitkan artikel seputar teknologi,
                         pendidikan, bisnis, dan banyak lagi.
                     </p>
@@ -65,7 +65,7 @@ export default function PostIndex({ posts, categories, filters }) {
                 {/* Pencarian + filter kategori */}
                 <form onSubmit={submitSearch} className="flex flex-col gap-3 sm:flex-row" role="search">
                     <div className="relative flex-1">
-                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                             <IconSearch />
                         </span>
                         <input
@@ -85,7 +85,7 @@ export default function PostIndex({ posts, categories, filters }) {
                     </button>
                 </form>
 
-                <div className="mt-4 flex flex-wrap gap-2" aria-label="Filter kategori">
+                <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter kategori">
                     <CategoryChip active={category === ''} onClick={() => pickCategory('')}>
                         Semua
                     </CategoryChip>
@@ -131,6 +131,7 @@ function CategoryChip({ active, onClick, children }) {
         <button
             type="button"
             onClick={onClick}
+            aria-pressed={active}
             className={`rounded-full border px-3 py-1 text-sm font-medium ${
                 active
                     ? 'border-indigo-600 bg-indigo-600 text-white'
@@ -149,7 +150,7 @@ function PostCard({ post }) {
             className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
         >
             {post.cover_url ? (
-                <img src={post.cover_url} alt="" className="h-40 w-full object-cover" loading="lazy" />
+                <img src={post.cover_url} alt="" width="400" height="160" decoding="async" className="h-40 w-full object-cover" loading="lazy" />
             ) : (
                 <div className="flex h-40 items-center justify-center bg-gradient-to-br from-indigo-100 to-violet-100 text-4xl font-black text-indigo-800">
                     {post.title.charAt(0).toUpperCase()}

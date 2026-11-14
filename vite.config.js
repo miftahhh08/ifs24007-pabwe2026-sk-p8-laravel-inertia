@@ -12,6 +12,10 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    build: {
+        cssCodeSplit: true,
+        chunkSizeWarningLimit: 700,
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

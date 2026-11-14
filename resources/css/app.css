@@ -17,6 +17,19 @@ summary {
     cursor: pointer;
 }
 
+/* Tailwind v4 membuat placeholder semi-transparan (kontras rendah). */
+::placeholder {
+    color: #64748b; /* slate-500: kontras >= 4.5:1 pada putih */
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar-anim,
+    .animate-spin {
+        animation: none;
+    }
+}
+
 button:disabled {
     cursor: not-allowed;
 }

@@ -1,7 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import PublicLayout from '../../Layouts/PublicLayout';
-import MarkdownViewer from '../../components/MarkdownViewer';
 import { IconArrowLeft, IconLogin, IconUserPlus } from '../../components/Icons';
+
+// Viewer Markdown berukuran besar: dimuat terpisah agar bundel utama tetap ringan.
+const MarkdownViewer = lazy(() => import('../../components/MarkdownViewer'));
 
 export default function PostShow({ post }) {
     const { auth } = usePage().props;
@@ -25,17 +28,19 @@ export default function PostShow({ post }) {
                 </p>
 
                 {post.cover_url && (
-                    <img src={post.cover_url} alt={`Sampul ${post.title}`} className="mt-8 w-full rounded-xl object-cover" />
+                    <img src={post.cover_url} alt={`Sampul ${post.title}`} width="768" height="432" fetchPriority="high" decoding="async" className="mt-8 aspect-video w-full rounded-xl object-cover" />
                 )}
 
                 <div className="mt-8">
-                    <MarkdownViewer content={post.content} />
+                    <Suspense fallback={<div className="min-h-64" aria-busy="true" />}>
+                        <MarkdownViewer content={post.content} />
+                    </Suspense>
                 </div>
 
                 {!auth.user && (
-                    <aside className="mt-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-8 text-center text-white">
+                    <aside className="mt-14 rounded-2xl bg-gradient-to-br from-indigo-700 to-violet-700 p-8 text-center text-white">
                         <h2 className="text-xl font-bold">Suka membaca? Mulai menulis juga!</h2>
-                        <p className="mt-2 text-indigo-100">
+                        <p className="mt-2 text-white">
                             Bergabunglah dengan komunitas penulis BlogVerse Pro dan bagikan ceritamu.
                         </p>
                         <div className="mt-6 flex flex-wrap justify-center gap-3">
