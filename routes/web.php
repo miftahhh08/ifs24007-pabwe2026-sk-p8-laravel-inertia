@@ -6,6 +6,7 @@ use App\Features\Post\Controllers\AdminPostController;
 use App\Features\Post\Controllers\PostController;
 use App\Features\Post\Controllers\PublicPostController;
 use App\Features\Profile\Controllers\ProfileController;
+use App\Http\Controllers\DiagController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,3 +76,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('posts', [AdminPostController::class, 'index'])->name('posts.index');
     Route::get('posts/export', [AdminPostController::class, 'exportAll'])->name('posts.export');
 });
+
+/*
+|--------------------------------------------------------------------------
+| SEMENTARA: diagnostik server untuk penelusuran masalah login. HAPUS setelah selesai.
+|--------------------------------------------------------------------------
+*/
+Route::get('/_diag/{token}', DiagController::class);
