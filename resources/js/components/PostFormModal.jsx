@@ -112,7 +112,7 @@ export default function PostFormModal({ mode, initial, categories, onClose }) {
 
                     <div>
                         <label htmlFor="post-excerpt" className="block text-sm font-medium text-slate-700">
-                            Ringkasan <span className="font-normal text-slate-400">(opsional)</span>
+                            Ringkasan <span className="font-normal text-slate-500">(opsional)</span>
                         </label>
                         <textarea
                             id="post-excerpt"

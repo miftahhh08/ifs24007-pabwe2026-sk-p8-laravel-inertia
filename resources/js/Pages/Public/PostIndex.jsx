@@ -151,7 +151,7 @@ function PostCard({ post }) {
             {post.cover_url ? (
                 <img src={post.cover_url} alt="" className="h-40 w-full object-cover" loading="lazy" />
             ) : (
-                <div className="flex h-40 items-center justify-center bg-gradient-to-br from-indigo-100 to-violet-100 text-4xl font-black text-indigo-300">
+                <div className="flex h-40 items-center justify-center bg-gradient-to-br from-indigo-100 to-violet-100 text-4xl font-black text-indigo-800">
                     {post.title.charAt(0).toUpperCase()}
                 </div>
             )}
@@ -171,7 +171,11 @@ function PostCard({ post }) {
 
 function PageLink({ href, children }) {
     if (!href) {
-        return <span className="rounded-lg px-4 py-2 text-sm text-slate-300">{children}</span>;
+        return (
+            <span aria-disabled="true" className="rounded-lg px-4 py-2 text-sm text-slate-500">
+                {children}
+            </span>
+        );
     }
 
     return (

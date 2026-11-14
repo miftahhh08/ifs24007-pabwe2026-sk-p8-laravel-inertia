@@ -81,8 +81,10 @@ export default function AppLayout({ children }) {
             </aside>
 
             <div className="flex-1 md:ml-60">
-                <FlashMessage />
-                <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">{children}</main>
+                <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+                    <FlashMessage />
+                    {children}
+                </main>
             </div>
         </div>
     );

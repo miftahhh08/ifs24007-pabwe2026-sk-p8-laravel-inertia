@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 import MarkdownViewer from '../../components/MarkdownViewer';
-import PostFormModal from '../../components/PostFormModal';
 import { IconArrowLeft, IconPencil, IconTrash, IconUpload } from '../../components/Icons';
+
+const PostFormModal = lazy(() => import('../../components/PostFormModal'));
 
 export default function Show({ post, categories }) {
     const { errors } = usePage().props;
@@ -117,9 +118,11 @@ export default function Show({ post, categories }) {
                 <MarkdownViewer content={post.content} />
             </div>
 
-            {editing && (
-                <PostFormModal mode="edit" initial={post} categories={categories} onClose={() => setEditing(false)} />
-            )}
+            <Suspense fallback={null}>
+                {editing && (
+                    <PostFormModal mode="edit" initial={post} categories={categories} onClose={() => setEditing(false)} />
+                )}
+            </Suspense>
             {deleting && <ConfirmDeleteModal post={post} onClose={() => setDeleting(false)} />}
         </AppLayout>
     );

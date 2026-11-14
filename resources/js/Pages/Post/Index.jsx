@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import AiGeneratorModal from '../../components/AiGeneratorModal';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
-import ImportModal from '../../components/ImportModal';
 import KebabMenu from '../../components/KebabMenu';
 import Pagination from '../../components/Pagination';
-import PostFormModal from '../../components/PostFormModal';
 import { IconDownload, IconEye, IconPencil, IconPlus, IconSearch, IconSparkles, IconTrash, IconUpload } from '../../components/Icons';
+
+// Modal dimuat saat pertama dibuka (code-splitting): editor Markdown TOAST UI berukuran besar
+// dan tidak boleh ikut diunduh hanya untuk menampilkan daftar artikel.
+const PostFormModal = lazy(() => import('../../components/PostFormModal'));
+const AiGeneratorModal = lazy(() => import('../../components/AiGeneratorModal'));
+const ImportModal = lazy(() => import('../../components/ImportModal'));
 
 function StatCard({ label, value, tone }) {
     return (
@@ -124,7 +127,7 @@ export default function Index({ posts, stats, categories, filters }) {
                             {post.cover_url ? (
                                 <img src={post.cover_url} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                             ) : (
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-xl font-black text-indigo-300">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-xl font-black text-indigo-800">
                                     {post.title.charAt(0).toUpperCase()}
                                 </div>
                             )}
@@ -172,18 +175,20 @@ export default function Index({ posts, stats, categories, filters }) {
 
             <Pagination paginator={posts} />
 
-            {formState && (
-                <PostFormModal
-                    key={formState.post?.id ?? 'new'}
-                    mode={formState.mode}
-                    initial={formState.post}
-                    categories={categories}
-                    onClose={() => setFormState(null)}
-                />
-            )}
+            <Suspense fallback={null}>
+                {formState && (
+                    <PostFormModal
+                        key={formState.post?.id ?? 'new'}
+                        mode={formState.mode}
+                        initial={formState.post}
+                        categories={categories}
+                        onClose={() => setFormState(null)}
+                    />
+                )}
+                {showImport && <ImportModal onClose={() => setShowImport(false)} />}
+                {showAi && <AiGeneratorModal onClose={() => setShowAi(false)} />}
+            </Suspense>
             {deleting && <ConfirmDeleteModal post={deleting} onClose={() => setDeleting(null)} />}
-            {showImport && <ImportModal onClose={() => setShowImport(false)} />}
-            {showAi && <AiGeneratorModal onClose={() => setShowAi(false)} />}
         </AppLayout>
     );
 }

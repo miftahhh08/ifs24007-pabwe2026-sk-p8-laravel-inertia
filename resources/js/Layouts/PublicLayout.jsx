@@ -68,9 +68,10 @@ export default function PublicLayout({ children }) {
                 </nav>
             </header>
 
-            <FlashMessage />
-
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+                <FlashMessage />
+                {children}
+            </main>
 
             <footer className="mt-16 border-t border-slate-200 bg-white">
                 <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
